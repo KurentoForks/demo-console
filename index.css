@@ -85,6 +85,7 @@ div[data-type="object-key"] {
 }
 
 div.comma-float {
+  clear: both;
   float: left;
   color: #222;
 }

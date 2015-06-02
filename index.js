@@ -51,8 +51,10 @@ function log(console, level) {
 
   var item = document.createElement('li');
 
+  var argv = [].slice.call(arguments, 2)
+
   // initialise the item
-  item.innerHTML = [].slice.call(arguments, 2).map(renderData).join(' ');
+  item.innerHTML = argv.map(renderData).join(' ');
 
   // add the class
   item.classList.add(level);
@@ -65,7 +67,7 @@ function log(console, level) {
   }, 100);
 
   // pass the call through to the original window console
-  console[level].apply(console, arguments);
+  console[level].apply(console, argv);
 };
 
 /* internals */
@@ -101,10 +103,10 @@ function renderData(data, index) {
     var hasSpace = reSpace.test(key);
     var quoteChar = hasSpace ? '\'' : '';
 
-    return '<div data-type="object-key">' +
-      span(quoteChar + key + quoteChar + ': ', 'key') +
-      renderData(data[key]) +
-      '</div>';
+    var content = span(quoteChar + key + quoteChar, 'key') + span(': ')
+                + renderData(data[key])
+
+    return '<div data-type="object-key">' + content + '</div>';
   }
 
   if (typeof data == 'undefined') {
