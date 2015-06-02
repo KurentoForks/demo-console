@@ -1,14 +1,8 @@
+(function(window){
 /* jshint node: true */
 'use strict';
 
-var reSpace = /\s/;
-var theme;
-var items;
-
-var fs = require('fs');
-var themes = {
-  simple: fs.readFileSync(__dirname + '/themes/simple.css', 'utf8')
-};
+const reSpace = /\s/;
 
 /**
   # demo-console
@@ -24,27 +18,44 @@ var themes = {
 
 **/
 
+function Console(console)
+{
+  if(!(this instanceof Console))
+    return new Console(console)
+
+  console = console || window.console
+
+  // ensure we have items
+  var items = initConsole();
+
+  this.log   = log.bind(items, console, 'log')
+  this.info  = log.bind(items, console, 'info')
+  this.error = log.bind(items, console, 'error')
+  this.warn  = log.bind(items, console, 'warn')
+
+  this.trace = function()
+  {
+    var stack = (new Error).stack
+
+    log.apply(items, arguments.unshift(console, 'trace').push(stack));
+  };
+}
+
 /**
   ### console.log()
 
   As per the browser `console.log` statement
 **/
-var log = exports.log = function() {
+function log(console, level) {
+  var items = this
+
   var item = document.createElement('li');
 
-  // ensure we have items
-  items = items || initConsole();
-
-  // initialise the theme if not initialised
-  theme = theme || initTheme();
-
   // initialise the item
-  item.innerHTML = [].slice.call(arguments).map(renderData).join(' ');
+  item.innerHTML = [].slice.call(arguments, 2).map(renderData).join(' ');
 
-  // if we have a class add the class
-  if (this && this.class) {
-    item.classList.add(this.class);
-  }
+  // add the class
+  item.classList.add(level);
 
   // add to the list
   items.appendChild(item);
@@ -54,20 +65,7 @@ var log = exports.log = function() {
   }, 100);
 
   // pass the call through to the original window console
-  window.console.log.apply(window.console, arguments);
-};
-
-exports.error = function() {
-  log.apply({ class: 'error' }, arguments);
-};
-
-/**
-  ### console.useTheme(name)
-
-  Tell the demo console that you wish to use a particular theme.
-**/
-exports.useTheme = function(name) {
-  theme = initTheme(name);
+  console[level].apply(console, arguments);
 };
 
 /* internals */
@@ -96,26 +94,6 @@ function initConsole() {
   return list;
 }
 
-function initTheme(theme) {
-  var stylesheet = document.getElementById('democonsole-theme');
-
-  // if found, then remove it
-  if (stylesheet) {
-    document.head.removeChild(stylesheet);
-  }
-
-  // create a link element to bring the demo console style in
-  stylesheet = document.createElement('style');
-  stylesheet.id = 'democonsole-theme';
-  stylesheet.innerText = theme || themes.simple;
-
-  // add to the dom
-  document.head.appendChild(stylesheet);
-
-  // return the stylesheet
-  return stylesheet;
-}
-
 function renderData(data, index) {
   var initialItem = index === 0;
 
@@ -135,45 +113,48 @@ function renderData(data, index) {
   if (data === true || data === false) {
     return span(data, 'boolean');
   }
-  else if (Array.isArray(data)) {
+  if (Array.isArray(data)) {
     return span('[') + data.map(function(entry) {
       return renderData(entry);
     }).join(', ') + span(']');
   }
-  else if (typeof data == 'string' || (data instanceof String)) {
+  if (typeof data == 'string' || (data instanceof String)) {
     return span(initialItem ? data : ('\'' + data + '\''), 'string');
   }
-  else if (data === null) {
+  if (data === null) {
     return span('null', 'null');
   }
-  else if (data instanceof Error) {
+  if (data instanceof Error) {
     return span(data.toString(), 'error');
   }
   else if (data instanceof Window) {
     return span('window', 'window');
   }
-  else if (data instanceof DocumentType) {
+  if (data instanceof DocumentType) {
     return 'doctype: ' + data.name;
   }
-  else if (data instanceof HTMLCollection) {
+  if (data instanceof HTMLCollection) {
     return span('[]', 'html-collection');
   }
-  else if (data instanceof HTMLDocument) {
+  if (data instanceof HTMLDocument) {
     return [].slice.call(document.childNodes).map(renderData);
   }
-  else if (data instanceof HTMLElement) {
+  if (data instanceof HTMLElement) {
     return data.tagName;
   }
-  else if (typeof data == 'object') {
+  if (typeof data == 'object') {
     return '<div data-type="object">' + span('{') +
       Object.keys(data).map(extractData).join('<div class="comma-float">,</div>') +
       span('}') + '</div>';
   }
-  else {
-    return span(data, typeof data);
-  }
+
+  return span(data, typeof data);
 }
 
 function span(content, dataType) {
   return '<span data-type="' + (dataType || '') + '">' + content + '</span>';
 }
+
+
+window.Console = Console
+})(this)

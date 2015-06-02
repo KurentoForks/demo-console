@@ -1,5 +1,5 @@
 div.democonsole {
-  position: absolute;
+  position: relative;
   bottom: 20px;
   left: 0px;
   z-index: 100;
@@ -35,8 +35,16 @@ div.democonsole ul li > * {
   margin-right: 8px;
 }
 
+div.democonsole ul li.info:before {
+  content: 'ℹ';
+}
+
 div.democonsole ul li.error:before {
-  content: '!';
+  content: '☠';
+}
+
+div.democonsole ul li.warn:before {
+  content: '⚠';
 }
 
 span[data-type=""] {
@@ -56,8 +64,16 @@ span[data-type="key"] {
   vertical-align: top;
 }
 
+span[data-type="info"] {
+  color: blue;
+}
+
 span[data-type="error"] {
   color: red;
+}
+
+span[data-type="warn"] {
+  color: yellow;
 }
 
 div[data-type="object"] {
